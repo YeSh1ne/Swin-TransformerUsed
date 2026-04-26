@@ -40,7 +40,7 @@
 4. 小数据集+深层模型从头训练，特征提取能力不足
 
 ### 训练命令
-```bash
+```
 python -m torch.distributed.launch --nproc_per_node=1 main.py \
 --cfg configs/swin/swin_tiny_patch4_window7_224.yaml \
 --local_rank 0 \
@@ -48,7 +48,7 @@ python -m torch.distributed.launch --nproc_per_node=1 main.py \
 DATA.DATASET cifar100 \
 TRAIN.EPOCHS 120 \
 MODEL.NUM_CLASSES 100
-```bash
+```
 
 ## 方案二：基于预训练权重的 CIFAR100 分类训练（最优方案）
 ### 一、方案核心逻辑
@@ -69,7 +69,7 @@ MODEL.NUM_CLASSES 100
     - 预训练权重路径：本地预训练文件（如 `swin_tiny_patch4_window7_224.pth`），无需额外手动下载。
 
 ### 四、训练命令（直接复制运行）
-```bash
+```
 python -m torch.distributed.launch --nproc_per_node=1 main.py \
 --cfg configs/swin/swin_tiny_patch4_window7_224.yaml \
 --local_rank 0 \
@@ -79,4 +79,4 @@ MODEL.NUM_CLASSES=100 \
 MODEL.PRETRAINED=./swin_tiny_patch4_window7_224.pth \
 TRAIN.EPOCHS=40 \
 SAVE.FREQ=10
-```bash
+```
