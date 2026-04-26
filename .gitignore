@@ -133,3 +133,9 @@ dmypy.json
 
 # Pyre type checker
 .pyre/
+*.pth
+*.ckpt
+dataset/
+weights/
+__pycache__/
+*.log
