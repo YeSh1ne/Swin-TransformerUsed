@@ -24,7 +24,7 @@
 根目录的main.py文件, 用来跑训练代码
 训练代码下文有写
 ### 4.推理文件
-根目录的predict文件, 执行只需python predict --img <推理图片位置> 即可
+根目录的predict文件, 执行只需python predict --img <推理图片路径> 即可
 
 ## 数据集加载方式
 ### 1. 数据来源
