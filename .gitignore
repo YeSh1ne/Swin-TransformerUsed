@@ -139,3 +139,4 @@ dataset/
 weights/
 __pycache__/
 *.log
+data/
