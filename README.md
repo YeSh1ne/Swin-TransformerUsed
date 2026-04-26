@@ -48,3 +48,33 @@ python -m torch.distributed.launch --nproc_per_node=1 main.py \
 DATA.DATASET cifar100 \
 TRAIN.EPOCHS 120 \
 MODEL.NUM_CLASSES 100
+
+## 方案二：基于预训练权重的 CIFAR100 分类训练（最优方案）
+### 一、方案核心逻辑
+依托 ImageNet 预训练权重，通过微调适配 CIFAR100 分类任务，解决从零训练精度低、泛化能力弱的问题，兼顾训练效率与模型性能。
+
+### 二、预训练加载原理
+1.  核心逻辑：复用预训练模型的通用视觉特征，仅重新学习 CIFAR100 分类规则，无需从零训练模型主干网络。
+2.  具体操作：
+    - 加载 ImageNet 预训练权重（含通用视觉特征提取能力），自动舍弃原分类头（适配 1000 类分类的部分）。
+    - 重新初始化 CIFAR100 对应的分类头（100 类），保留主干网络（特征提取层）全部参数。
+    - 通过微调训练，让模型快速适配 CIFAR100 分类任务，无需重新学习基础视觉特征。
+
+### 三、训练配置
+1.  模型配置：使用 Swin 模型，输入尺寸 224×224，适配 CIFAR100 数据集。
+2.  训练参数：
+    - 训练轮数：无需过多迭代，40 轮即可满足精度要求
+    - 类别数量：100 类（CIFAR100 标准分类）
+    - 预训练权重路径：本地预训练文件（如 `swin_tiny_patch4_window7_224.pth`），无需额外手动下载。
+
+### 四、训练命令（直接复制运行）
+```bash
+python -m torch.distributed.launch --nproc_per_node=1 main.py \
+--cfg configs/swin/swin_tiny_patch4_window7_224.yaml \
+--local_rank 0 \
+--opts \
+DATA.DATASET=cifar100 \
+MODEL.NUM_CLASSES=100 \
+MODEL.PRETRAINED=./swin_tiny_patch4_window7_224.pth \
+TRAIN.EPOCHS=40 \
+SAVE.FREQ=10
