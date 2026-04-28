@@ -23,6 +23,58 @@ except:
     print("[Warning] Fused window process have not been installed. Please refer to get_started.md for installation.")
 
 
+# ======================== 改进模块 1：全局场景引导 ========================
+# 解决：山、云、大海被前景干扰，置信度低
+# =========================================================================
+class SceneGuidanceModule(nn.Module):
+    def __init__(self, dim):
+        super().__init__()
+        self.global_pool = nn.AdaptiveAvgPool2d(1)
+        self.channel_gate = nn.Sequential(
+            nn.Linear(dim, dim // 4),
+            nn.GELU(),
+            nn.Linear(dim // 4, dim),
+            nn.Sigmoid()
+        )
+
+    def forward(self, x):
+        # 修复：Swin 这里传入的是 [B, L, C]，不是 4D 张量！
+        B, L, C = x.shape
+        H = W = int(L**0.5)
+        x = x.permute(0, 2, 1).view(B, C, H, W)  # [B, C, H, W]
+        
+        g = self.global_pool(x).flatten(1)
+        g = self.channel_gate(g).view(B, C, 1, 1)
+        x = x * g
+        
+        return x.flatten(2).transpose(1, 2)  # [B, L, C]
+
+# ======================== 改进模块 2：细粒度增强 ========================
+# 解决：郁金香 ↔ 兰花 混淆，花卉区分不清
+# ======================================================================
+class FineGrainedEnhanceModule(nn.Module):
+    def __init__(self, dim):
+        super().__init__()
+        self.dwconv = nn.Conv2d(dim, dim, 3, padding=1, groups=dim)
+        self.pwconv = nn.Conv2d(dim, dim, 1)
+        self.norm = nn.BatchNorm2d(dim)
+        self.act = nn.GELU()
+
+    def forward(self, x):
+        # 修复：Swin 这里传入的是 [B, L, C]
+        B, L, C = x.shape
+        H = W = int(L**0.5)
+        x = x.permute(0, 2, 1).view(B, C, H, W)  # [B, C, H, W]
+        
+        res = x
+        x = self.dwconv(x)
+        x = self.pwconv(x)
+        x = self.norm(x)
+        x = self.act(x + res)
+        
+        return x.flatten(2).transpose(1, 2)  # [B, L, C]
+
+
 class Mlp(nn.Module):
     def __init__(self, in_features, hidden_features=None, out_features=None, act_layer=nn.GELU, drop=0.):
         super().__init__()
@@ -525,6 +577,10 @@ class SwinTransformer(nn.Module):
         self.num_features = int(embed_dim * 2 ** (self.num_layers - 1))
         self.mlp_ratio = mlp_ratio
 
+        # #增强模块
+        # self.scene_guide = SceneGuidanceModule(self.num_features)
+        # self.fine_grained = FineGrainedEnhanceModule(self.num_features)
+
         # split image into non-overlapping patches
         self.patch_embed = PatchEmbed(
             img_size=img_size, patch_size=patch_size, in_chans=in_chans, embed_dim=embed_dim,
@@ -594,6 +650,13 @@ class SwinTransformer(nn.Module):
         for layer in self.layers:
             x = layer(x)
 
+        # # ======================== 你的改进：双增强模块 ========================
+        # # 只对 CIFAR-100 启用（你可以删掉条件让所有任务都增强）
+        # if self.num_classes == 100:
+        #     x = self.scene_guide(x)   # 用 init 里定义好的
+        #     x = self.fine_grained(x)
+        # # ====================================================================
+        
         x = self.norm(x)  # B L C
         x = self.avgpool(x.transpose(1, 2))  # B C 1
         x = torch.flatten(x, 1)

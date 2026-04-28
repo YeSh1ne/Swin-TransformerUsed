@@ -3,12 +3,11 @@ import torchvision.transforms as T
 from PIL import Image
 from models import build_model
 from config import _C
-import argparse
-import os
+import argparse  # 新增：命令行解析
 
 # ==================== 固定配置 ====================
 CONFIG_PATH = "configs/swin/swin_tiny_patch4_window7_224.yaml"
-CHECKPOINT_PATH = "output/swin_tiny_patch4_window7_224/cifar100-pretrain/ckpt_epoch_39.pth"
+CHECKPOINT_PATH = "output/swin_tiny_patch4_window7_224/default/ckpt_epoch_39.pth"
 # ====================================================
 
 # CIFAR100 中文类别
@@ -60,45 +59,19 @@ def predict_image(model, image_path):
 
     return CLASSES[top_class.item()], top_prob.item() * 100
 
-# ==================== 批量推理 ====================
-def batch_predict(model, img_dir):
-    # 支持的图片格式
-    img_exts = ['.jpg', '.jpeg', '.png', '.bmp', '.JPG']
-    img_files = [f for f in os.listdir(img_dir) if os.path.splitext(f)[-1] in img_exts]
-    #平均置信度
-    avgconf = 0
-    cnt = 0
-    if not os.path.exists(img_dir):
-        print(f"❌ 目录不存在: {img_dir}")
-        return
-    if len(img_files) == 0:
-        print(f"❌ 在 {img_dir} 中未找到图片")
-        return
-
-    print(f"\n✅ 找到 {len(img_files)} 张图片，开始批量推理...\n")
-    print("=" * 70)
-    print(f"{'文件名':<32} {'类别':<16} {'置信度'}")
-    print("=" * 70)
-
-    for filename in img_files:
-        img_path = os.path.join(img_dir, filename)
-        label, conf = predict_image(model, img_path)
-        print(f"{filename:<32} {label:<16} {conf:.2f}%")
-        avgconf += conf
-        cnt += 1
-        
-    return avgconf, cnt
-# ==================== 主函数 ====================
 if __name__ == "__main__":
-    parser = argparse.ArgumentParser(description="Swin Transformer 批量推理")
-    parser.add_argument("--img_dir", default="./test", help="批量推理图片文件夹，默认 ./test")
+    # 命令行参数
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--img", default="test.png", help="图片路径")
     args = parser.parse_args()
 
     print("🔹 加载模型...")
     model = load_model()
-    avgconf = 0
-    print("🔹 开始批量推理...")
-    avgconf, cnt = batch_predict(model, args.img_dir)
-    print("\n")
-    print(f"平均置信度为{avgconf/cnt:.2f}%")
-    print("\n🎉 全部推理完成！")
+
+    print("🔹 预测中...")
+    label, conf = predict_image(model, args.img)
+
+    print("\n✅ 预测成功！")
+    print(f"🖼️ 图片: {args.img}")
+    print(f"🚀 类别: {label}")
+    print(f"🎯 置信度: {conf:.2f}%")

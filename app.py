@@ -8,18 +8,34 @@ from config import _C
 
 # ==================== 配置 ====================
 CONFIG_PATH = "configs/swin/swin_tiny_patch4_window7_224.yaml"
-CHECKPOINT_PATH = "output/swin_tiny_patch4_window7_224/default/ckpt_epoch_55.pth"
+CHECKPOINT_PATH = "output/swin_tiny_patch4_window7_224/cifar100-pretrain/ckpt_epoch_39.pth"
 UPLOAD_FOLDER = "uploads"
 os.makedirs(UPLOAD_FOLDER, exist_ok=True)
 
-CLASSES = ['飞机', '汽车', '鸟', '猫', '鹿', '狗', '青蛙', '马', '船', '卡车']
-
+# CLASSES = ['飞机', '汽车', '鸟', '猫', '鹿', '狗', '青蛙', '马', '船', '卡车']
+# CIFAR100
+CLASSES = [
+    '苹果', '金鱼', '婴儿', '熊', '河狸', '床', '蜜蜂', '甲虫',
+    '自行车', '瓶子', '碗', '男孩', '桥梁', '公交车', '蝴蝶', '骆驼',
+    '罐头', '城堡', '毛毛虫', '牛', '椅子', '黑猩猩', '时钟',
+    '云朵', '蟑螂', '沙发', '螃蟹', '鳄鱼', '杯子', '恐龙',
+    '海豚', '大象', '比目鱼', '森林', '狐狸', '女孩', '仓鼠',
+    '房屋', '袋鼠', '键盘', '台灯', '割草机', '豹子', '狮子',
+    '蜥蜴', '龙虾', '男人', '枫树', '摩托车', '山脉', '老鼠',
+    '蘑菇', '橡树', '橙子', '兰花', '水獭', '棕榈树', '梨子',
+    '皮卡卡车', '松树', '平原', '盘子', '罂粟花', '豪猪',
+    '负鼠', '兔子', '浣熊', '鳐鱼', '道路', '火箭', '玫瑰',
+    '大海', '海豹', '鲨鱼', '鼩鼱', '臭鼬', '摩天大楼', '蜗牛', '蛇',
+    '蜘蛛', '松鼠', '有轨电车', '向日葵', '甜椒', '桌子',
+    '坦克', '电话', '电视', '老虎', '拖拉机', '火车', '鳟鱼',
+    '郁金香', '乌龟', '衣柜', '鲸鱼', '柳树', '狼', '女人', '蠕虫'
+]
 # ==================== 加载模型（全局只加载一次） ====================
 print("🔹 正在加载模型...")
 config = _C.clone()
 config.merge_from_file(CONFIG_PATH)
 config.defrost()
-config.MODEL.NUM_CLASSES = 10
+config.MODEL.NUM_CLASSES = 100
 config.LOCAL_RANK = 0
 config.freeze()
 
