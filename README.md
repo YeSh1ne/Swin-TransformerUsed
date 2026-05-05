@@ -90,6 +90,6 @@ python -m torch.distributed.launch --nproc_per_node=1 main.py \
 DATA.DATASET cifar100 \
 TRAIN.EPOCHS 40 \
 MODEL.NUM_CLASSES 100 \
-SAVE.SAVE_FREQ 10 \
+SAVE_FREQ 10 \
 MODEL.PRETRAINED ./swin_tiny_patch4_window7_224.pth
 ```
