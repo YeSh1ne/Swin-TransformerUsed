@@ -7,8 +7,10 @@ import argparse
 import os
 
 # ==================== 固定配置 ====================
-CONFIG_PATH = "configs/swin/swin_tiny_patch4_window7_224.yaml"
-CHECKPOINT_PATH = "output/swin_tiny_patch4_window7_224/cifar100-pretrain/ckpt_epoch_39.pth"
+# CONFIG_PATH = "configs/swin/swin_tiny_patch4_window7_224.yaml"
+CONFIG_PATH = "configs/swinv2/swinv2_tiny_patch4_window16_256.yaml"
+# CHECKPOINT_PATH = "output/swin_tiny_patch4_window7_224/cifar100-pretrain/ckpt_epoch_39.pth"
+CHECKPOINT_PATH = "output/swinv2_tiny_patch4_window16_256/default/ckpt_epoch_39.pth"
 # ====================================================
 
 # CIFAR100 中文类别
@@ -45,11 +47,12 @@ def load_model():
 
 def predict_image(model, image_path):
     transform = T.Compose([
-        T.Resize((224, 224)),
+        # T.Resize((224, 224)),
+        # v2版本用256 * 256
+        T.Resize((256, 256)),
         T.ToTensor(),
         T.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225])
     ])
-
     img = Image.open(image_path).convert("RGB")
     img = transform(img).unsqueeze(0).cuda()
 
